@@ -17,6 +17,7 @@
     "despawn.MobDespawnMixin",
     "orphan_tickets.TicketOwnerAccessor",
     "recipebook.ServerRecipeBookMixin",
+    "safety.AdvancementEventsMixin",
     "safety.CommandsMixin",
     "safety.EntityLoadMixin",
     "safety.ServerLevelAddEntityMixin",
