@@ -27,6 +27,10 @@ public final class PerfConfig {
     public static final ForgeConfigSpec.IntValue STRUCT_GLOBAL_RADIUS;
     public static final ForgeConfigSpec.IntValue STRUCT_MIN_DISTANCE;
 
+    public static final ForgeConfigSpec.IntValue ORPHAN_CHECK_SECONDS;
+    public static final ForgeConfigSpec.IntValue ORPHAN_CONFIRM;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ORPHAN_EXEMPT;
+
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
 
@@ -60,6 +64,13 @@ public final class PerfConfig {
         STRUCT_LOCATE_RADIUS = b.comment("Радиус /locate, чанки.").defineInRange("locate_search_radius", 110, 1, 500);
         STRUCT_GLOBAL_RADIUS = b.comment("Общий предел радиуса поиска (глаз Эндера, дельфины, моды), чанки.").defineInRange("global_search_radius", 70, 1, 500);
         STRUCT_MIN_DISTANCE = b.comment("Новые структуры не ближе стольких блоков к другим (0 — выключено).").defineInRange("min_structure_distance", 32, 0, 512);
+        b.pop();
+
+        b.comment("Брошенные метки чанков (orphan_tickets): метка мода «от сущности», чьей сущности больше нет, снимается.").push("orphan_tickets");
+        ORPHAN_CHECK_SECONDS = b.comment("Как часто проверять, секунды.").defineInRange("check_seconds", 60, 5, 3600);
+        ORPHAN_CONFIRM = b.comment("Сколько проверок подряд владельца не должно быть, чтобы снять метку.").defineInRange("confirm_checks", 2, 1, 100);
+        ORPHAN_EXEMPT = b.comment("Моды, чьи метки не трогать (id мода).")
+                .defineListAllowEmpty("exempt_mods", List.of(), o -> o instanceof String);
         b.pop();
 
         SPEC = b.build();

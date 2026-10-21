@@ -2,6 +2,7 @@ package faygolover.flperf;
 
 import com.mojang.logging.LogUtils;
 import faygolover.flperf.feature.AsyncSave;
+import faygolover.flperf.feature.OrphanTickets;
 import faygolover.flperf.feature.WarmChunks;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -36,6 +37,12 @@ public final class FlPerf {
                 if (e.phase == TickEvent.Phase.END) WarmChunks.onServerTick(e.getServer());
             });
             MinecraftForge.EVENT_BUS.addListener((ServerStoppingEvent e) -> WarmChunks.onServerStopping());
+        }
+        if (Features.on("orphan_tickets")) {
+            MinecraftForge.EVENT_BUS.addListener((ServerStartedEvent e) -> OrphanTickets.onServerStarted(e.getServer()));
+            MinecraftForge.EVENT_BUS.addListener((TickEvent.ServerTickEvent e) -> {
+                if (e.phase == TickEvent.Phase.END) OrphanTickets.onServerTick(e.getServer());
+            });
         }
         if (Features.on("async_save")) MinecraftForge.EVENT_BUS.addListener((ServerStoppedEvent e) -> AsyncSave.flush());
 

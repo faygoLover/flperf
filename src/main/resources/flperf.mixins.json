@@ -15,6 +15,7 @@
     "async_save.SavedDataMixin",
     "despawn.EnderManDespawnMixin",
     "despawn.MobDespawnMixin",
+    "orphan_tickets.TicketOwnerAccessor",
     "recipebook.ServerRecipeBookMixin",
     "safety.CommandsMixin",
     "safety.EntityLoadMixin",

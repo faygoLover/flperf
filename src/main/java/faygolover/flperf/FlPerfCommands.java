@@ -3,6 +3,7 @@ package faygolover.flperf;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import faygolover.flperf.feature.OrphanTickets;
 import faygolover.flperf.feature.TickGuard;
 import faygolover.flperf.feature.WarmChunks;
 import net.minecraft.commands.CommandSourceStack;
@@ -12,7 +13,7 @@ import net.minecraft.world.level.ChunkPos;
 
 import java.util.List;
 
-/** /flperf warm [here|clear], /flperf frozen [resume|kill <номер>] — для админов (op 2). */
+/** /flperf warm [here|clear], /flperf frozen [resume|kill <номер>], /flperf tickets — для админов (op 2). */
 public final class FlPerfCommands {
     private FlPerfCommands() {}
 
@@ -25,6 +26,11 @@ public final class FlPerfCommands {
                             WarmChunks.clear(c.getSource().getServer());
                             return ok(c, "Учёт тёплых чанков сброшен, удержание снято.");
                         })))
+                .then(Commands.literal("tickets").executes(c -> {
+                    List<String> lines = OrphanTickets.report(c.getSource().getServer(), 12);
+                    lines.forEach(line -> ok(c, line));
+                    return lines.size();
+                }))
                 .then(Commands.literal("frozen")
                         .executes(FlPerfCommands::frozenList)
                         .then(Commands.literal("resume").then(Commands.argument("id", IntegerArgumentType.integer(1)).executes(c -> release(c, false))))
