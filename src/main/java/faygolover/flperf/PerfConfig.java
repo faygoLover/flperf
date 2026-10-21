@@ -67,7 +67,7 @@ public final class PerfConfig {
         b.pop();
 
         b.comment("Брошенные метки чанков (orphan_tickets): метка мода «от сущности», чьей сущности больше нет, снимается.").push("orphan_tickets");
-        ORPHAN_CHECK_SECONDS = b.comment("Как часто проверять, секунды.").defineInRange("check_seconds", 60, 5, 3600);
+        ORPHAN_CHECK_SECONDS = b.comment("Как часто проверять, секунды.").defineInRange("check_seconds", 600, 5, 3600);
         ORPHAN_CONFIRM = b.comment("Сколько проверок подряд владельца не должно быть, чтобы снять метку.").defineInRange("confirm_checks", 2, 1, 100);
         ORPHAN_EXEMPT = b.comment("Моды, чьи метки не трогать (id мода).")
                 .defineListAllowEmpty("exempt_mods", List.of(), o -> o instanceof String);

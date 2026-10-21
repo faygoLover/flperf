@@ -39,7 +39,7 @@ public final class OrphanTickets {
     }
 
     public static void onServerTick(MinecraftServer server) {
-        int period = Math.max(1, cfg(() -> PerfConfig.ORPHAN_CHECK_SECONDS.get(), 60)) * 20;
+        int period = Math.max(1, cfg(() -> PerfConfig.ORPHAN_CHECK_SECONDS.get(), 600)) * 20;
         if (++tick % period != 0) return;
         int confirm = Math.max(1, cfg(() -> PerfConfig.ORPHAN_CONFIRM.get(), 2));
         List<? extends String> exempt = cfgList();
