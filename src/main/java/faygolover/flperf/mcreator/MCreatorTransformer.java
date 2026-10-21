@@ -9,8 +9,10 @@ import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -26,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -34,6 +37,11 @@ import java.util.stream.Stream;
  * {@code cap.orElse(new XxxModVariables.PlayerVariables())} — новый объект на каждый вызов, много раз за тик.
  * Трансформер меняет {@code new PlayerVariables()} на общий объект ({@link SharedDefaults}), как MCreator Mem Fix.
  * Моды MCreator ищутся при каждом запуске по классу {@code <пакет>.network.<Имя>ModVariables$PlayerVariables}.
+ * <p>
+ * Второе (функция mcreator_advancements): процедуры MCreator, которые только выдают свои достижения (их выбрасывает
+ * белый список flperf), — подписчики событий в списке {@link #MUTED} сразу возвращаются. Так у SCPO и Butchery нет
+ * проверок инвентаря каждый тик и поиска достижения на каждом клике/крафте/убийстве. Список проверен по коду: в этих
+ * процедурах нет ничего, кроме выдачи достижения (и монет Butchery за два достижения — награды не нужны).
  */
 public final class MCreatorTransformer implements ILaunchPluginService {
     private static final Logger LOG = LoggerFactory.getLogger("flperf");
@@ -44,11 +52,45 @@ public final class MCreatorTransformer implements ILaunchPluginService {
     /** [корень пакета мода с «/» на конце, внутреннее имя класса PlayerVariables] */
     private final List<String[]> profiles;
 
-    private MCreatorTransformer(List<String[]> profiles) { this.profiles = profiles; }
+    /** Процедуры MCreator, которые только выдают достижения (внутренние имена). */
+    static final Set<String> MUTED = Set.of(
+            "net/mcreator/butchery/procedures/BreathlessadvancementaddedProcedure",
+            "net/mcreator/butchery/procedures/ItsafloateradvancementgrantedProcedure",
+            "net/mcreator/butchery/procedures/FirstcarcassadvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantbloodandgearsProcedure",
+            "net/mcreator/butchery/procedures/GrantbloodbankadvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantbutcheradvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantcutabovetherestadvancementProcedure",
+            "net/mcreator/butchery/procedures/GranteverypartcountsadvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantfirstbloodadvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantHangingaroundadvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantheadsupProcedure",
+            "net/mcreator/butchery/procedures/GrantknifetomeatyouProcedure",
+            "net/mcreator/butchery/procedures/GrantleatherlatethanneveradvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantPlayertickadvancementsProcedure",
+            "net/mcreator/butchery/procedures/GrantrackemupadvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantrotisserierookieProcedure",
+            "net/mcreator/butchery/procedures/GrantseasontoperfectionadvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantskininthegameadvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantsteptowardsleatheradvancementProcedure",
+            "net/mcreator/butchery/procedures/GrantthetrophymakerProcedure",
+            "net/scpo/procedures/Attack966Procedure",
+            "net/scpo/procedures/CleanSecretionProcedure",
+            "net/scpo/procedures/Effected939Procedure",
+            "net/scpo/procedures/GiveAdvancementsItemsProcedure",
+            "net/scpo/procedures/Kill939Procedure",
+            "net/scpo/procedures/OvertimeStartUpProcedure",
+            "net/scpo/procedures/Recontain055RightClickProcedure",
+            "net/scpo/procedures/SCP1548AchievementGiverProcedure");
+    private static final String SUBSCRIBE = "Lnet/minecraftforge/eventbus/api/SubscribeEvent;";
 
-    public static void install() throws Throwable {
-        List<String[]> profiles = findProfiles();
-        if (profiles.isEmpty()) return;
+    private final boolean mute;
+
+    private MCreatorTransformer(List<String[]> profiles, boolean mute) { this.profiles = profiles; this.mute = mute; }
+
+    public static void install(boolean variables, boolean mute) throws Throwable {
+        List<String[]> profiles = variables ? findProfiles() : List.of();
+        if (profiles.isEmpty() && !mute) return;
         Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
         unsafeField.setAccessible(true);
         Unsafe unsafe = (Unsafe) unsafeField.get(null);
@@ -57,9 +99,10 @@ public final class MCreatorTransformer implements ILaunchPluginService {
         LaunchPluginHandler handler = (LaunchPluginHandler) lookup.findVarHandle(Launcher.class, "launchPlugins", LaunchPluginHandler.class).get(Launcher.INSTANCE);
         @SuppressWarnings("unchecked")
         Map<String, ILaunchPluginService> plugins = (Map<String, ILaunchPluginService>) lookup.findVarHandle(LaunchPluginHandler.class, "plugins", Map.class).get(handler);
-        MCreatorTransformer t = new MCreatorTransformer(profiles);
+        MCreatorTransformer t = new MCreatorTransformer(profiles, mute);
         plugins.put(t.name(), t);
         LOG.info("[flperf] MCreator: {} мод(ов): {}", profiles.size(), profiles.stream().map(p -> p[1].substring(p[1].lastIndexOf('/') + 1)).toList());
+        if (mute) LOG.info("[flperf] MCreator: процедуры, которые только выдают достижения, отключены (до {} шт.)", MUTED.size());
     }
 
     private static List<String[]> findProfiles() {
@@ -91,6 +134,7 @@ public final class MCreatorTransformer implements ILaunchPluginService {
     public EnumSet<Phase> handlesClass(Type classType, boolean isEmpty) {
         if (isEmpty) return NO;
         String name = classType.getInternalName();
+        if (mute && MUTED.contains(name)) return YES;
         for (String[] p : profiles) if (name.startsWith(p[0])) return YES;
         return NO;
     }
@@ -98,6 +142,19 @@ public final class MCreatorTransformer implements ILaunchPluginService {
     @Override
     public boolean processClass(Phase phase, ClassNode classNode, Type classType) {
         boolean modified = false;
+        if (mute && MUTED.contains(classNode.name)) {
+            for (MethodNode m : classNode.methods) {
+                if (!m.desc.endsWith(")V") || m.visibleAnnotations == null) continue;
+                boolean subscriber = false;
+                for (AnnotationNode a : m.visibleAnnotations) if (SUBSCRIBE.equals(a.desc)) subscriber = true;
+                if (!subscriber) continue;
+                m.instructions.insert(new InsnNode(Opcodes.RETURN));   // подписчик сразу возвращается
+                modified = true;
+                LOG.debug("[flperf] MCreator: отключён {}.{}", classNode.name, m.name);
+            }
+            if (modified) LOG.info("[flperf] MCreator: отключена выдача достижений: {}", classNode.name.substring(classNode.name.lastIndexOf('/') + 1));
+        }
+        if (profiles.isEmpty()) return modified;
         for (MethodNode m : classNode.methods) {
             InsnList insns = m.instructions;
             for (AbstractInsnNode insn = insns.getFirst(); insn != null; insn = insn.getNext()) {

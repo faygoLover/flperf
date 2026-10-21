@@ -24,9 +24,9 @@ public final class FlPerfMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         MixinExtrasBootstrap.init();
-        if (Features.on("mcreator")) {
+        if (Features.on("mcreator") || Features.on("mcreator_advancements")) {
             try {
-                MCreatorTransformer.install();
+                MCreatorTransformer.install(Features.on("mcreator"), Features.on("mcreator_advancements") && Features.on("advancements"));
             } catch (Throwable t) {
                 LOG.warn("[flperf] MCreator: трансформер не подключён", t);
             }
