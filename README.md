@@ -18,6 +18,7 @@
 | `gpu_leak` | клиент | видеопамять забытых буферов освобождается (Cleaner) | Gpu memory leak fix |
 | `mcreator` | оба | моды MCreator не создают объект переменных игрока на каждое обращение | MCreator Mem Fix |
 | `async_save` | сервер | SavedData и level.dat пишутся в фоне атомарно; при остановке ждём запись | fastasyncworldsave |
+| `background_fps` | клиент | не в фокусе — 1 кадр/с и звук 25%; мышь над окном — 60; свёрнуто — без кадров и звука; тики идут | Dynamic FPS |
 | `atlas_pack` | клиент | встроенный обязательный ресурспак: Tobacconist, Superb Warfare, `peace`, иконка двери G3 уменьшены → атлас 8192² | — |
 
 Разбор исходных модов: `Claude Code/Pack Audit/briefs/flperf_analysis.md`.

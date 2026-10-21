@@ -47,6 +47,7 @@
   ],
   "client": [
     "client.advancements.ToastComponentMixin",
+    "client.background_fps.GameRendererFrameMixin",
     "client.distance.EntityDistanceMixin",
     "client.distance.OcclusionCullerEmbeddiumMixin",
     "client.gpu_leak.RenderTargetMixin",
