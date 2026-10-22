@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Сбой в тике не роняет сервер: виновник «замораживается» (не тикает), в лог — полный стек, админам — сообщение.
+ * Игрок не замораживается никогда — у него только пропускается тик со сбоем.
  * Заморозка только в памяти: после перезапуска объект снова тикает (и снова заморозится, если ошибка осталась).
  * По мотивам Neruina.
  */
@@ -50,7 +51,34 @@ public final class TickGuard {
     }
 
     public static void entityFailed(Entity entity, Throwable error) {
+        // Игрока не замораживаем никогда: он встал бы как вкопанный, и ни смерть, ни смена режима не помогали.
+        // Только пропускаем этот тик и пишем в лог (не чаще раза в 10 с на игрока).
+        if (entity instanceof net.minecraft.world.entity.player.Player player) {
+            playerFailed(player, error);
+            return;
+        }
         freeze("сущность", entity.getType().builtInRegistryHolder().key().location().toString(), entity.level(), entity.blockPosition(), entity, error);
+    }
+
+    private static final Map<java.util.UUID, Long> PLAYER_ERRORS = new ConcurrentHashMap<>();
+
+    private static void playerFailed(net.minecraft.world.entity.player.Player player, Throwable error) {
+        long now = System.currentTimeMillis();
+        Long last = PLAYER_ERRORS.get(player.getUUID());
+        if (last != null && now - last < 10_000L) return;
+        PLAYER_ERRORS.put(player.getUUID(), now);
+        String name = player.getName().getString();
+        FlPerf.LOG.error("[flperf] Сбой в тике игрока {} ({}) — тик пропущен, игрок не заморожен", name,
+                player.level().isClientSide ? "клиент" : "сервер", error);
+        if (player.level().isClientSide) return;
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null) return;
+        int level = cfg(PerfConfig.GUARD_NOTIFY_LEVEL::get, 2);
+        Component msg = Component.literal("[flperf] Сбой в тике игрока " + name + " (тик пропущен, игрок не заморожен). Причина: " + error)
+                .withStyle(ChatFormatting.RED);
+        server.execute(() -> {
+            for (ServerPlayer p : server.getPlayerList().getPlayers()) if (p.hasPermissions(level)) p.sendSystemMessage(msg);
+        });
     }
 
     public static void blockEntityFailed(BlockEntity be, Throwable error) {
