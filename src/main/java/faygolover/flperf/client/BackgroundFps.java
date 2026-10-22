@@ -52,6 +52,10 @@ public final class BackgroundFps {
             case UNFOCUSED -> PerfClientConfig.UNFOCUSED_VOLUME.get();
             case MINIMIZED -> 0.0;
         };
-        mc.getSoundManager().updateSourceVolume(SoundSource.MASTER, (float) (mc.options.getSoundSourceVolume(SoundSource.MASTER) * factor));
+        float own = mc.options.getSoundSourceVolume(SoundSource.MASTER);
+        // Never down to 0 ourselves: at 0 vanilla stops every sound playing (and plays no new ones), so
+        // mods' looping sounds were gone for good after the game was minimised. Practically silent instead.
+        float volume = (float) Math.max(own * factor, own > 0.0f ? 1.0E-4 : 0.0);
+        mc.getSoundManager().updateSourceVolume(SoundSource.MASTER, volume);
     }
 }
