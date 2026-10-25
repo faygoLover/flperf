@@ -35,8 +35,8 @@ public final class ClientEvents {
     public static void init(IEventBus modBus) {
         if (Features.on("atlas_pack")) modBus.addListener(ClientEvents::addPacks);
         if (Features.on("distance") || Features.on("gpu_leak")) MinecraftForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
-        if (Features.on("recipebook") || Features.on("advancements")) MinecraftForge.EVENT_BUS.addListener(ClientEvents::onScreenInit);
-        if (Features.on("advancements")) MinecraftForge.EVENT_BUS.addListener(ClientEvents::onScreenOpen);
+        if (Features.on("recipebook") || hideAdvancements()) MinecraftForge.EVENT_BUS.addListener(ClientEvents::onScreenInit);
+        if (hideAdvancements()) MinecraftForge.EVENT_BUS.addListener(ClientEvents::onScreenOpen);
     }
 
     private static void onClientTick(TickEvent.ClientTickEvent e) {
@@ -50,9 +50,14 @@ public final class ClientEvents {
         List<GuiEventListener> remove = new ArrayList<>();
         for (GuiEventListener l : e.getListenersList()) {
             if (Features.on("recipebook") && l instanceof ImageButton ib && RECIPE_BUTTON.equals(((ImageButtonAccessor) ib).flperf$texture())) remove.add(l);
-            if (Features.on("advancements") && e.getScreen() instanceof PauseScreen && l instanceof Button b && isKey(b.getMessage(), "gui.advancements")) remove.add(l);
+            if (hideAdvancements() && e.getScreen() instanceof PauseScreen && l instanceof Button b && isKey(b.getMessage(), "gui.advancements")) remove.add(l);
         }
         remove.forEach(e::removeListener);
+    }
+
+    /** кнопку, окно и всплывашки достижений прятать — только если включено advancements_hide_ui */
+    private static boolean hideAdvancements() {
+        return Features.on("advancements") && Features.on("advancements_hide_ui");
     }
 
     private static boolean isKey(Component c, String key) {

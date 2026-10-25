@@ -44,6 +44,7 @@ public final class FlPerfMixinPlugin implements IMixinConfigPlugin {
         if (!Features.on(feature)) return false;
         if (mixinClassName.contains("Embeddium") && !has("embeddium")) return false;
         if (feature.equals("terrablender") && !has("terrablender")) return false;
+        if (feature.equals("advancements_hide_ui") && !Features.on("advancements")) return false;
         return true;
     }
 

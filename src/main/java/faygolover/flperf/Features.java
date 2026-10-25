@@ -25,7 +25,8 @@ public final class Features {
     static {
         def("warm_chunks", "Тёплые чанки: где играют, чанки остаются загруженными без тиков и прогреваются при старте сервера");
         def("tick_guard", "Сбой в тике сущности, блок-сущности, блока или предмета не роняет сервер: виновник замораживается, админам — сообщение");
-        def("advancements", "Достижения по белому списку (advancements_keep в flperf-common.toml); окно достижений и уведомления выключены; скины робота Mekanism открыты всем");
+        def("advancements", "Достижения по белому списку (advancements_keep в flperf-common.toml); скины робота Mekanism открыты всем");
+        def("advancements_hide_ui", "false", "Прятать кнопку «Достижения» в меню паузы, окно достижений и их всплывашки (работает вместе с advancements). false — всё видно: так нужно для вкладки «Департамент» (S5 Achievements)");
         def("sync_loads", "Мобы, пчёлы, поиск пути, карты, лучи и сон не грузят чанк синхронно посреди тика");
         def("despawn", "Моб, подобравший предмет, не становится вечным; при исчезновении роняет подобранное (эндермен — блок)");
         def("distance", "Дальность прорисовки эллипсом: выше/ниже и по бокам видно меньше (настройки в flperf-client.toml)");
@@ -42,14 +43,16 @@ public final class Features {
         def("atlas_pack", "Встроенный ресурспак: огромные текстуры Tobacconist и Superb Warfare уменьшены (атлас блоков вдвое меньше)");
     }
 
-    private static void def(String key, String comment) { ALL.put(key, new String[]{"true", comment}); }
+    private static void def(String key, String comment) { def(key, "true", comment); }
+    private static void def(String key, String byDefault, String comment) { ALL.put(key, new String[]{byDefault, comment}); }
 
     private static final Properties VALUES = new Properties();
     private static boolean loaded;
 
     public static synchronized boolean on(String key) {
         if (!loaded) load();
-        return Boolean.parseBoolean(VALUES.getProperty(key, "true"));
+        String[] d = ALL.get(key);
+        return Boolean.parseBoolean(VALUES.getProperty(key, d != null ? d[0] : "true"));
     }
 
     private static void load() {

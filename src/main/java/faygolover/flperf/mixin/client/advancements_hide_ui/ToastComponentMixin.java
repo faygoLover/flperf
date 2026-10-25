@@ -1,4 +1,4 @@
-package faygolover.flperf.mixin.client.advancements;
+package faygolover.flperf.mixin.client.advancements_hide_ui;
 
 import net.minecraft.client.gui.components.toasts.AdvancementToast;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Уведомлений о достижениях нет. */
+/** Уведомлений о достижениях нет (только если advancements_hide_ui). */
 @Mixin(ToastComponent.class)
 public abstract class ToastComponentMixin {
     @Inject(method = "addToast", at = @At("HEAD"), cancellable = true)

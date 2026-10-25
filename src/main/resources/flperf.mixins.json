@@ -49,7 +49,7 @@
     "tick_guard.ServerLevelBlockGuardMixin"
   ],
   "client": [
-    "client.advancements.ToastComponentMixin",
+    "client.advancements_hide_ui.ToastComponentMixin",
     "client.background_fps.GameRendererFrameMixin",
     "client.distance.EntityDistanceMixin",
     "client.distance.OcclusionCullerEmbeddiumMixin",

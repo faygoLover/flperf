@@ -54,8 +54,9 @@ public final class PerfConfig {
 
         b.comment("Достижения по белому списку (advancements).").push("advancements");
         ADV_KEEP = b.comment("Какие достижения загружать: id или маска с * на конце. Остальные выбрасываются.",
-                        "rpmedicine:book/* — замки записей книги RP Medicine (уровни навыка, раздел ГМа).")
-                .defineListAllowEmpty("advancements_keep", List.of("rpmedicine:book/*"), o -> o instanceof String);
+                        "rpmedicine:book/* — замки записей книги RP Medicine (уровни навыка, раздел ГМа).",
+                        "s5:* — вкладка «Департамент» (S5 Achievements).")
+                .defineListAllowEmpty("advancements_keep", List.of("rpmedicine:book/*", "s5:*"), o -> o instanceof String);
         b.pop();
 
         b.comment("Поиск структур и генерация (structures).").push("structures");
