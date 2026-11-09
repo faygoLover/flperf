@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class StructureSpacing {
     private static final Map<ChunkGenerator, StructureSpacing> BY_GENERATOR = new WeakHashMap<>();
     private static final int XZ_OFFSET = 3_000_000;
+    /** Поток ставит структуру по команде ГМа: расстояние не проверять. */
+    public static final ThreadLocal<Boolean> IGNORE = ThreadLocal.withInitial(() -> false);
 
     private final Map<Long, String> cells = new ConcurrentHashMap<>();
 

@@ -28,6 +28,7 @@
     "structures.LegacyRandomSourceMixin",
     "structures.LocateCommandMixin",
     "structures.PlacedFeatureMixin",
+    "structures.PlaceCommandMixin",
     "structures.StructureMinDistanceMixin",
     "sync_loads.BeeMixin",
     "sync_loads.DynamicGameEventListenerMixin",

@@ -39,7 +39,7 @@ public abstract class StructureMinDistanceMixin {
         StructureStart start = cir.getReturnValue();
         int distance;
         try { distance = PerfConfig.STRUCT_MIN_DISTANCE.get(); } catch (IllegalStateException e) { distance = 32; }
-        if (start == StructureStart.INVALID_START || distance <= 0) return;
+        if (start == StructureStart.INVALID_START || distance <= 0 || StructureSpacing.IGNORE.get()) return;
         Structure self = (Structure) (Object) this;
         ResourceLocation id = access.registryOrThrow(Registries.STRUCTURE).getKey(self);
         String name = id != null ? id.toString() : "unknown:" + self;
